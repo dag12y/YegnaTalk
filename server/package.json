@@ -1,0 +1,20 @@
+{
+    "name": "server",
+    "version": "1.0.0",
+    "description": "A real-time chat application built with the MERN stack and Socket.IO, enabling instant messaging and seamless communication.",
+    "main": "server.js",
+    "scripts": {
+        "start":"node server.js",
+        "dev":"nodemon server.js"
+    },
+    "type":"module",
+    "keywords": [],
+    "author": "dagm yibabe",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^5.1.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.10"
+    }
+}
