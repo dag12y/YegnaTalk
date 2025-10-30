@@ -9,10 +9,17 @@ export async function signup(req, res) {
 
         //if user exist,send error
         if (user)
-            return res.send({
+            return res.status(400).send({
                 message: "User already exist.",
                 success: false,
             });
+        // check for the password length
+        if (!req.body.password || req.body.password.length < 8) {
+            return res.status(400).send({
+                message: "Password must be at least 8 characters long",
+                success: false,
+            });
+        }
 
         //encrypt the password
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -24,7 +31,7 @@ export async function signup(req, res) {
         await newUser.save();
 
         //displaying success text
-        res.send({
+        res.status(201).send({
             message: "User created successfully",
             success: true,
         });
@@ -41,7 +48,7 @@ export async function login(req, res) {
         //check if user exist
         const user = await User.findOne({ email: req.body.email });
         if (!user)
-            return res.send({
+            return res.status(400).send({
                 message: "user not found",
                 success: false,
             });
@@ -49,7 +56,7 @@ export async function login(req, res) {
         //check if password is correct
         const isValid = await bcrypt.compare(req.body.password, user.password);
         if (!isValid)
-            return res.send({
+            return res.status(400).send({
                 message: "incorrect password",
                 success: false,
             });

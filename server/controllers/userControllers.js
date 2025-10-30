@@ -12,7 +12,7 @@ export async function getLoggedUser(req, res) {
         })
 
     } catch (error) {
-        res.send({
+        res.status(400).send({
             message: error.message,
             success: false,
         });
@@ -30,7 +30,7 @@ export async function getAllUsers(req,res) {
             data:allUsers
         })
     } catch (error) {
-        res.send({
+        res.status(400).send({
             message: error.message,
             success: false,
         });
