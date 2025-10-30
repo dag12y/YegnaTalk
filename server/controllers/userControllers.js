@@ -22,8 +22,7 @@ export async function getLoggedUser(req, res) {
 export async function getAllUsers(req,res) {
     try {
         //getting all users except the logged user
-        const userId=req.body.userId
-        const allUsers=await User.find({_id:{$ne:{userId}}})
+        const allUsers=await User.find({_id:{$ne:req.body.userId}})
 
          res.send({
             message:"All users fetched successfully",
