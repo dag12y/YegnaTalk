@@ -3,7 +3,7 @@ import User from "./../models/userModel.js";
 export async function getLoggedUser(req, res) {
     try {
         //get the logged user
-        const user = await User.findOne({ _id: req.body.userId });
+        const user = await User.findById(req.body.userId );
 
         res.send({
             message:"user fetched successfully",

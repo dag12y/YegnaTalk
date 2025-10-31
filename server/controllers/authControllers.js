@@ -46,7 +46,7 @@ export async function signup(req, res) {
 export async function login(req, res) {
     try {
         //check if user exist
-        const user = await User.findOne({ email: req.body.email });
+        const user = await User.findOne({ email: req.body.email }).select("+password");
         if (!user)
             return res.status(400).send({
                 message: "user not found",

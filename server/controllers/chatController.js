@@ -18,3 +18,21 @@ export async function createNewChat(req, res) {
         });
     }
 }
+
+export async function getAllChat(req,res) {
+    try {
+        //get all chat that contains the user id in the member
+        const allChat = await Chats.find({members:{$in:req.body.userId}})
+         res.status(201).send({
+             message: "Chat fetched successfully",
+             success: true,
+             data: allChat,
+         });
+
+    } catch (error) {
+         res.status(400).send({
+             message: error.message,
+             success: false,
+         });
+    }
+}
