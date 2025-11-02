@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { login } from "../../api/auth";
 
 export default function Login() {
     const [user, setUser] = useState({
@@ -7,9 +8,25 @@ export default function Login() {
         password: "",
     });
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
-        console.log(user);
+        try {
+            const response = await login(user)
+            if (response.success) {
+                alert(response.message);
+                localStorage.setItem("token", response.token);
+                window.location.href = "/";
+            } else {
+                alert(response.message);
+            }
+
+        } catch (error) {
+            if (error.response && error.response.data) {
+                alert(error.response.data.message);
+            } else {
+                alert("Something went wrong. Please try again.");
+            }
+        }
     }
 
     return (
