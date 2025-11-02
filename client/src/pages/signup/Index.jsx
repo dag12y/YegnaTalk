@@ -1,20 +1,18 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Signup() {
-    const [user,setUser] = useState({
-        firstname:'',
-        lastname:'',
-        email:'',
-        password:''
-    })
+    const [user, setUser] = useState({
+        firstname: "",
+        lastname: "",
+        email: "",
+        password: "",
+    });
 
-    function handleFormSubmit(e){
+    function handleFormSubmit(e) {
         e.preventDefault();
         console.log(user);
-        
-
     }
-
 
     return (
         <div className="container">
@@ -25,7 +23,7 @@ export default function Signup() {
                     <h1>Create Account</h1>
                 </div>
                 <div className="form">
-                    <form onSubmit={handleFormSubmit}> 
+                    <form onSubmit={handleFormSubmit}>
                         <div className="column">
                             <input
                                 type="text"
@@ -76,7 +74,7 @@ export default function Signup() {
                 <div className="card_terms">
                     <span>
                         Already have an account?
-                        <a>Login Here</a>
+                        <Link to="/login">Login Here</Link>
                     </span>
                 </div>
             </div>

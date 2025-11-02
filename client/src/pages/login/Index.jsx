@@ -1,15 +1,15 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Login() {
-    const [user,setUser]=useState({
-        email:'',
-        password:''
-    })
+    const [user, setUser] = useState({
+        email: "",
+        password: "",
+    });
 
-    function handleSubmit(e){
+    function handleSubmit(e) {
         e.preventDefault();
         console.log(user);
-        
     }
 
     return (
@@ -22,15 +22,29 @@ export default function Login() {
                 </div>
                 <div className="form">
                     <form onSubmit={handleSubmit}>
-                        <input type="email" placeholder="Email" value={user.email} onChange={(e)=>setUser({...user,email:e.target.value})}/>
-                        <input type="password" placeholder="Password" value={user.password} onChange={(e)=>setUser({...user,password:e.target.value})}/>
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={user.email}
+                            onChange={(e) =>
+                                setUser({ ...user, email: e.target.value })
+                            }
+                        />
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={user.password}
+                            onChange={(e) =>
+                                setUser({ ...user, password: e.target.value })
+                            }
+                        />
                         <button>Login</button>
                     </form>
                 </div>
                 <div className="card_terms">
                     <span>
                         Don't have an account yet?
-                        <a>Signup Here</a>
+                        <Link to="/signup">Signup Here</Link>
                     </span>
                 </div>
             </div>
