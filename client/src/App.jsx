@@ -1,18 +1,19 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Home from "./pages/home/Index";
 import Login from "./pages/login/Index";
 import Signup from "./pages/signup/Index";
 
 export default function App() {
     return (
-        <div>
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<Home/>}></Route>
-                    <Route path="/Signup" element={<Signup/>}></Route>
-                    <Route path="/Login" element={<Login/>}></Route>
-                </Routes>
-            </BrowserRouter>
-        </div>
+        <BrowserRouter>
+            <Toaster position="top-center" reverseOrder={false} />
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="*" element={<div>404 Not Found</div>} />
+            </Routes>
+        </BrowserRouter>
     );
 }

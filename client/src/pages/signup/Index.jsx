@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { signup } from "../../api/auth";
+import { toast } from "react-hot-toast";
 
 export default function Signup() {
     const [user, setUser] = useState({
@@ -9,19 +10,28 @@ export default function Signup() {
         email: "",
         password: "",
     });
+    const [loading, setLoading] = useState(false); 
 
     async function handleFormSubmit(e) {
         e.preventDefault();
+        setLoading(true);
         try {
             const response = await signup(user);
 
-            alert(response.message);
+            if (response.success) {
+                toast.success(response.message);
+                window.location.href = "/login";
+            } else {
+                toast.error(response.message);
+            }
         } catch (error) {
             if (error.response && error.response.data) {
-                alert(error.response.data.message);
+                toast.error(error.response.data.message);
             } else {
-                alert("Something went wrong. Please try again.");
+                toast.error("Something went wrong. Please try again.");
             }
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -79,12 +89,14 @@ export default function Signup() {
                                 setUser({ ...user, password: e.target.value })
                             }
                         />
-                        <button>Sign Up</button>
+                        <button type="submit" disabled={loading}>
+                            {loading ? "Signing Up..." : "Sign Up"}
+                        </button>
                     </form>
                 </div>
                 <div className="card_terms">
                     <span>
-                        Already have an account?
+                        Already have an account?{" "}
                         <Link to="/login">Login Here</Link>
                     </span>
                 </div>

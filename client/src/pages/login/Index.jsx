@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { login } from "../../api/auth";
+import { toast } from "react-hot-toast";
 
 export default function Login() {
     const [user, setUser] = useState({
@@ -13,18 +14,18 @@ export default function Login() {
         try {
             const response = await login(user)
             if (response.success) {
-                alert(response.message);
+                toast.success(response.message);
                 localStorage.setItem("token", response.token);
                 window.location.href = "/";
             } else {
-                alert(response.message);
+                toast.error(response.message);
             }
 
         } catch (error) {
             if (error.response && error.response.data) {
-                alert(error.response.data.message);
+                toast.error(error.response.data.message);
             } else {
-                alert("Something went wrong. Please try again.");
+                toast.error("Something went wrong. Please try again.");
             }
         }
     }
