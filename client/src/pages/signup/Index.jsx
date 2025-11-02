@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { signup } from "../../api/auth";
 
 export default function Signup() {
     const [user, setUser] = useState({
@@ -9,9 +10,19 @@ export default function Signup() {
         password: "",
     });
 
-    function handleFormSubmit(e) {
+    async function handleFormSubmit(e) {
         e.preventDefault();
-        console.log(user);
+        try {
+            const response = await signup(user);
+
+            alert(response.message);
+        } catch (error) {
+            if (error.response && error.response.data) {
+                alert(error.response.data.message);
+            } else {
+                alert("Something went wrong. Please try again.");
+            }
+        }
     }
 
     return (
