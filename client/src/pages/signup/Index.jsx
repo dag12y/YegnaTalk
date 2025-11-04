@@ -2,22 +2,27 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { signup } from "../../api/auth";
 import { toast } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { showLoader, hideLoader } from "../../redux/loaderSlice.js";
+import { useSelector } from "react-redux";
 
 export default function Signup() {
+    const { loading } = useSelector((state) => state.loaderReducer);
+
     const [user, setUser] = useState({
         firstname: "",
         lastname: "",
         email: "",
         password: "",
     });
-    const [loading, setLoading] = useState(false); 
+    const dispatch = useDispatch();
 
     async function handleFormSubmit(e) {
         e.preventDefault();
-        setLoading(true);
         try {
+            dispatch(showLoader());
             const response = await signup(user);
-
+            dispatch(hideLoader());
             if (response.success) {
                 toast.success(response.message);
                 window.location.href = "/login";
@@ -25,13 +30,12 @@ export default function Signup() {
                 toast.error(response.message);
             }
         } catch (error) {
+            dispatch(hideLoader());
             if (error.response && error.response.data) {
                 toast.error(error.response.data.message);
             } else {
                 toast.error("Something went wrong. Please try again.");
             }
-        } finally {
-            setLoading(false);
         }
     }
 

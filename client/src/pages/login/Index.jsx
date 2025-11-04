@@ -2,17 +2,26 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { login } from "../../api/auth";
 import { toast } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { showLoader, hideLoader } from "../../redux/loaderSlice.js";
+import { useSelector } from "react-redux";
 
 export default function Login() {
+    const { loading } = useSelector((state) => state.loaderReducer);
+
     const [user, setUser] = useState({
         email: "",
         password: "",
     });
 
+    const dispatch = useDispatch();
+
     async function handleSubmit(e) {
         e.preventDefault();
         try {
-            const response = await login(user)
+            dispatch(showLoader());
+            const response = await login(user);
+            dispatch(hideLoader());
             if (response.success) {
                 toast.success(response.message);
                 localStorage.setItem("token", response.token);
@@ -20,8 +29,8 @@ export default function Login() {
             } else {
                 toast.error(response.message);
             }
-
         } catch (error) {
+            dispatch(hideLoader());
             if (error.response && error.response.data) {
                 toast.error(error.response.data.message);
             } else {
@@ -56,7 +65,10 @@ export default function Login() {
                                 setUser({ ...user, password: e.target.value })
                             }
                         />
-                        <button>Login</button>
+
+                        <button type="submit" disabled={loading}>
+                            {loading ? "Logging in..." : "Login"}
+                        </button>
                     </form>
                 </div>
                 <div className="card_terms">
