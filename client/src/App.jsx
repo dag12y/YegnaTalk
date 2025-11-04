@@ -3,7 +3,7 @@ import { Toaster } from "react-hot-toast";
 import Home from "./pages/home/Index";
 import Login from "./pages/login/Index";
 import Signup from "./pages/signup/Index";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Loader from "./components/Loader";
 import { useSelector } from "react-redux";
 

@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../api/index.js";
 import { getLoggedUser } from "../api/user.js";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { showLoader, hideLoader } from "../redux/loaderSlice.js";
+import { setUser } from "../redux/userSlice.js";
+
 
 export default function ProtectedRoute({ children }) {
-    const [user, setUser] = useState(null);
+    const {user} = useSelector(state=>state.userReducer)
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -16,7 +18,7 @@ export default function ProtectedRoute({ children }) {
             const response = await getLoggedUser();
             dispatch(hideLoader());
             if (response.success) {
-                setUser(response.data);
+                dispatch(setUser(response.data));
             } else {
                 navigate("/login");
             }
@@ -43,7 +45,6 @@ export default function ProtectedRoute({ children }) {
 
     return (
         <>
-            {user ? <p>name: {user.firstname}</p> : <p>Loading user...</p>}
             {children}
         </>
     );
