@@ -8,7 +8,7 @@ const userSlice = createSlice({
             state.user = action.payload;
         },
         setAllUsers:(state,action)=>{
-            statusbar.allUsers=action.payload;
+            state.allUsers = action.payload;
         }
     },
 });

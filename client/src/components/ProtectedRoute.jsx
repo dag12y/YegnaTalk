@@ -8,7 +8,7 @@ import { setUser,setAllUsers } from "../redux/userSlice.js";
 
 
 export default function ProtectedRoute({ children }) {
-    const {user} = useSelector(state=>state.userReducer)
+    const {user,allUsers} = useSelector(state=>state.userReducer)
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -34,12 +34,15 @@ export default function ProtectedRoute({ children }) {
             dispatch(showLoader());
             const response = await getAllUsers();
             dispatch(hideLoader());
+
             if (response.success) {
                 dispatch(setAllUsers(response.data));
             } else {
                 navigate("/login");
             }
         } catch (error) {
+            dispatch(hideLoader());
+            console.log(error);
             
         }
     }
@@ -49,12 +52,13 @@ export default function ProtectedRoute({ children }) {
             try {
                 await axiosInstance.get("/api/protected");
                 await getLoggedInUser();
+                await getSearchedUsers();
             } catch (error) {
                 localStorage.removeItem("token");
                 navigate("/login");
             }
         }
-        getSearchedUsers();
+        
         verify();
     }, [navigate]);
 
