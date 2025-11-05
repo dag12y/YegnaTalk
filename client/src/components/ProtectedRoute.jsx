@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../api/index.js";
-import { getLoggedUser } from "../api/user.js";
+import { getLoggedUser,getAllUsers } from "../api/user.js";
 import { useDispatch, useSelector } from "react-redux";
 import { showLoader, hideLoader } from "../redux/loaderSlice.js";
-import { setUser } from "../redux/userSlice.js";
+import { setUser,setAllUsers } from "../redux/userSlice.js";
 
 
 export default function ProtectedRoute({ children }) {
@@ -29,6 +29,21 @@ export default function ProtectedRoute({ children }) {
         }
     }
 
+    async function getSearchedUsers() {
+        try {
+            dispatch(showLoader());
+            const response = await getAllUsers();
+            dispatch(hideLoader());
+            if (response.success) {
+                dispatch(setAllUsers(response.data));
+            } else {
+                navigate("/login");
+            }
+        } catch (error) {
+            
+        }
+    }
+
     useEffect(() => {
         async function verify() {
             try {
@@ -39,7 +54,7 @@ export default function ProtectedRoute({ children }) {
                 navigate("/login");
             }
         }
-
+        getSearchedUsers();
         verify();
     }, [navigate]);
 
