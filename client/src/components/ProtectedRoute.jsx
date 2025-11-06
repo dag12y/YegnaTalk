@@ -4,7 +4,8 @@ import { axiosInstance } from "../api/index.js";
 import { getLoggedUser,getAllUsers } from "../api/user.js";
 import { useDispatch, useSelector } from "react-redux";
 import { showLoader, hideLoader } from "../redux/loaderSlice.js";
-import { setUser,setAllUsers } from "../redux/userSlice.js";
+import { setUser,setAllUsers, setAllChats } from "../redux/userSlice.js";
+import { getAllChats } from "../api/chat.js";
 
 
 export default function ProtectedRoute({ children }) {
@@ -47,12 +48,24 @@ export default function ProtectedRoute({ children }) {
         }
     }
 
+    async function getCurrentChats() {
+        try {
+            const response = await getAllChats();
+            if (response.success){
+                dispatch(setAllChats(response.data))
+            }
+        } catch (error) {
+            navigate('/login')
+        }
+    }
+
     useEffect(() => {
         async function verify() {
             try {
                 await axiosInstance.get("/api/protected");
                 await getLoggedInUser();
                 await getSearchedUsers();
+                await getCurrentChats();
             } catch (error) {
                 localStorage.removeItem("token");
                 navigate("/login");

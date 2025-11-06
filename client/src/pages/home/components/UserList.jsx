@@ -1,17 +1,17 @@
 import { useSelector } from "react-redux";
 
 export default function UserList({ search }) {
-    const { allUsers } = useSelector((state) => state.userReducer);
-
-    // if search is empty, show nothing
-    if (!search || search.trim() === "") {
-        return null;
-    }
+    const { allUsers, allChats } = useSelector((state) => state.userReducer);
+    const lowerSearch = search.toLowerCase();
 
     const filteredUsers = allUsers.filter((user) => {
+        if (!search.trim()) {
+            return allChats.some((chat) => chat.members.includes(user._id));
+        }
+
         return (
-            user.firstname.toLowerCase().includes(search.toLowerCase()) ||
-            user.lastname.toLowerCase().includes(search.toLowerCase())
+            user.firstname?.toLowerCase().includes(lowerSearch) ||
+            user.lastname?.toLowerCase().includes(lowerSearch)
         );
     });
 
@@ -46,11 +46,15 @@ export default function UserList({ search }) {
                                     {user.email}
                                 </div>
                             </div>
-                            <div className="user-start-chat">
-                                <button className="user-start-chat-btn">
-                                    Start Chat
-                                </button>
-                            </div>
+                            {!allChats.find((chat) =>
+                                chat.members.includes(user._id)
+                            ) && (
+                                <div className="user-start-chat">
+                                    <button className="user-start-chat-btn">
+                                        Start Chat
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
