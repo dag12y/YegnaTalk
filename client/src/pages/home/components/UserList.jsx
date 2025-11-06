@@ -2,7 +2,7 @@ import {toast} from 'react-hot-toast'
 import { useDispatch, useSelector } from "react-redux";
 import {createNewChat} from './../../../api/chat.js'
 import {hideLoader, showLoader} from './../../../redux/loaderSlice.js'
-import {setAllChats} from './../../../redux/userSlice.js'
+import {setAllChats,setSelectedChat} from './../../../redux/userSlice.js'
 
 export default function UserList({ search }) {
     const { allUsers, allChats ,user:currentUser} = useSelector((state) => state.userReducer);
@@ -34,6 +34,7 @@ export default function UserList({ search }) {
                 const newChat = response.data;
                 const updatedChat = [...allChats,newChat];
                 dispatch(setAllChats(updatedChat))
+                dispatch(setSelectedChat(newChat))
             }
         } catch (error) {
             toast.error(response.message);
@@ -41,10 +42,21 @@ export default function UserList({ search }) {
         }
     }
 
+    function openChat(selectedUserId){
+        const chat = allChats.find(chat=>
+            chat.members.includes(currentUser._id) &&
+            chat.members.includes(selectedUserId)
+        )
+
+        if(chat){
+            dispatch(setSelectedChat(chat))
+        }
+    }
+
     return (
         <>
             {filteredUsers.map((user) => (
-                <div key={user._id} className="user-search-filter">
+                <div key={user._id} className="user-search-filter" onClick={()=>openChat(user._id)}>
                     <div className="filtered-user">
                         <div className="filter-user-display">
                             {user.profilePic ? (
