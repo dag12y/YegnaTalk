@@ -1,8 +1,13 @@
-import { useSelector } from "react-redux";
+import {toast} from 'react-hot-toast'
+import { useDispatch, useSelector } from "react-redux";
+import {createNewChat} from './../../../api/chat.js'
+import {hideLoader, showLoader} from './../../../redux/loaderSlice.js'
+import {setAllChats} from './../../../redux/userSlice.js'
 
 export default function UserList({ search }) {
-    const { allUsers, allChats } = useSelector((state) => state.userReducer);
+    const { allUsers, allChats ,user:currentUser} = useSelector((state) => state.userReducer);
     const lowerSearch = search.toLowerCase();
+    const dispatch = useDispatch()
 
     const filteredUsers = allUsers.filter((user) => {
         if (!search.trim()) {
@@ -17,6 +22,23 @@ export default function UserList({ search }) {
 
     if (filteredUsers.length === 0) {
         return <div>No users found</div>;
+    }
+
+    async function handleNewChat(searchedUserId){
+        dispatch(showLoader);
+        let response = await createNewChat([currentUser._id,searchedUserId]);
+        dispatch(hideLoader)
+        try {
+            if(response.success){
+                toast.success(response.message);
+                const newChat = response.data;
+                const updatedChat = [...allChats,newChat];
+                dispatch(setAllChats(updatedChat))
+            }
+        } catch (error) {
+            toast.error(response.message);
+            hideLoader();
+        }
     }
 
     return (
@@ -50,7 +72,7 @@ export default function UserList({ search }) {
                                 chat.members.includes(user._id)
                             ) && (
                                 <div className="user-start-chat">
-                                    <button className="user-start-chat-btn">
+                                    <button className="user-start-chat-btn" onClick={()=>handleNewChat(user._id)}>
                                         Start Chat
                                     </button>
                                 </div>
