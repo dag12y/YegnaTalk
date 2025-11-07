@@ -41,10 +41,13 @@ export async function createNewChat(req, res) {
         const chat = new Chats({ members });
         const savedChat = await chat.save();
 
+        // Populate members before sending response
+        const populatedChat = await savedChat.populate("members");
+
         res.status(201).send({
             message: "New chat created successfully",
             success: true,
-            data: savedChat,
+            data: populatedChat,
         });
     } catch (error) {
         res.status(500).send({
