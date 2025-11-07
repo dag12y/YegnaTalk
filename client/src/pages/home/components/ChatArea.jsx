@@ -3,6 +3,7 @@ import { createNewMessage, getAllMessages } from "../../../api/message";
 import { showLoader, hideLoader } from "./../../../redux/loaderSlice";
 import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
+import moment from 'moment';
 
 export default function ChatArea() {
     const { selectedChat, user } = useSelector((state) => state.userReducer);
@@ -57,6 +58,21 @@ export default function ChatArea() {
         }
     }
 
+    function formatTime(timestamps){
+        const now=moment()
+        const diff = now.diff(moment(timestamps),'days')
+
+        if (diff<1){
+            return `Today ${moment(timestamps).format('hh:mm A')}`;
+        }else if(diff==1){
+            return `Yesterday ${moment(timestamps).format("hh:mm A")}`;
+
+        }else{
+            return moment(timestamps).format("MMM D, hh:mm A")
+        }
+
+    }
+
     useEffect(() => {
         getMessages();
     }, [selectedChat]);
@@ -73,21 +89,26 @@ export default function ChatArea() {
                             const isCurrentUserSender = msg.sender === user._id;
                             return (
                                 <div
-                                    className="message-container"
-                                    style={
+                                    key={msg._id || msg.createdAt}
+                                    className={`message-container ${
                                         isCurrentUserSender
-                                            ? { justifyContent: "end" }
-                                            : { justifyContent: "start" }
-                                    }
+                                            ? "justify-end"
+                                            : "justify-start"
+                                    }`}
                                 >
-                                    <div
-                                        className={
-                                            isCurrentUserSender
-                                                ? "send-message"
-                                                : "received-message"
-                                        }
-                                    >
-                                        {msg.text}
+                                    <div className="message-wrapper">
+                                        <div
+                                            className={
+                                                isCurrentUserSender
+                                                    ? "send-message"
+                                                    : "received-message"
+                                            }
+                                        >
+                                            {msg.text}
+                                        </div>
+                                        <div className="messages-timestamps">
+                                            {formatTime(msg.createdAt)}
+                                        </div>
                                     </div>
                                 </div>
                             );
