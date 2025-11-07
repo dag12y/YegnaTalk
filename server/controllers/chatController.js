@@ -1,4 +1,5 @@
 import Chats from "./../models/chatModel.js";
+import User from "./../models/userModel.js";
 
 // Create a new chat
 export async function createNewChat(req, res) {
@@ -58,7 +59,7 @@ export async function getAllChat(req, res) {
     try {
         const userId = req.body.userId; // from JWT middleware
 
-        const allChats = await Chats.find({ members: { $in: [userId] } })
+        const allChats = await Chats.find({ members: { $in: [userId] } }).populate('members').sort({updatedAt:-1});
             
         res.status(200).send({
             message: "Chats fetched successfully",

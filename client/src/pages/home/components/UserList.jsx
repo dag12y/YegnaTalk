@@ -5,13 +5,15 @@ import {hideLoader, showLoader} from './../../../redux/loaderSlice.js'
 import {setAllChats,setSelectedChat} from './../../../redux/userSlice.js'
 
 export default function UserList({ search }) {
-    const { allUsers, allChats ,user:currentUser} = useSelector((state) => state.userReducer);
+    const { allUsers, allChats ,user:currentUser,selectedChat} = useSelector((state) => state.userReducer);
     const lowerSearch = search.toLowerCase();
     const dispatch = useDispatch()
 
     const filteredUsers = allUsers.filter((user) => {
         if (!search.trim()) {
-            return allChats.some((chat) => chat.members.includes(user._id));
+            return allChats.some((chat) =>
+                chat.members.map((m) => m._id).includes(user._id)
+            );
         }
 
         return (
@@ -44,8 +46,8 @@ export default function UserList({ search }) {
 
     function openChat(selectedUserId){
         const chat = allChats.find(chat=>
-            chat.members.includes(currentUser._id) &&
-            chat.members.includes(selectedUserId)
+            chat.members.map(m=>m._id).includes(currentUser._id) &&
+            chat.members.map(m=>m._id).includes(selectedUserId)
         )
 
         if(chat){
@@ -53,11 +55,22 @@ export default function UserList({ search }) {
         }
     }
 
+    const isSelectedChat = (user)=>{
+        if(selectedChat){
+            return selectedChat.members.map(u=>u._id).includes(user._id);
+        }
+        return false
+    }
+
     return (
         <>
             {filteredUsers.map((user) => (
-                <div key={user._id} className="user-search-filter" onClick={()=>openChat(user._id)}>
-                    <div className="filtered-user">
+                <div
+                    key={user._id}
+                    className="user-search-filter"
+                    onClick={() => openChat(user._id)}
+                >
+                    <div className={!isSelectedChat(user) ? "filtered-user":'selected-user'}>
                         <div className="filter-user-display">
                             {user.profilePic ? (
                                 <img
@@ -81,10 +94,15 @@ export default function UserList({ search }) {
                                 </div>
                             </div>
                             {!allChats.find((chat) =>
-                                chat.members.includes(user._id)
+                                chat.members
+                                    .map((m) => m._id)
+                                    .includes(user._id)
                             ) && (
                                 <div className="user-start-chat">
-                                    <button className="user-start-chat-btn" onClick={()=>handleNewChat(user._id)}>
+                                    <button
+                                        className="user-start-chat-btn"
+                                        onClick={() => handleNewChat(user._id)}
+                                    >
                                         Start Chat
                                     </button>
                                 </div>

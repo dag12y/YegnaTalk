@@ -5,7 +5,7 @@ export default function Loader() {
     return (
         <div className="loader-overlay">
             <div className="loader-content">
-                <GridLoader color="#fff" size={80} />
+                <GridLoader color="#fff" size={40} />
             </div>
         </div>
     );
