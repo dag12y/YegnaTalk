@@ -344,3 +344,30 @@
   color: #0066cc;
   transform: scale(1.1);
 }
+
+/* CSS FOR CHAT MESSAGES */
+.message-container {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.send-message,
+.received-message {
+  padding: 10px 20px;
+  border-radius: 15px;
+  font-size: 14px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.send-message {
+  background-color: #007acc; 
+  color: white;
+  align-self: flex-end;
+}
+
+.received-message {
+  background-color: #e0e0e0;
+  color: #28282B;
+  align-self: flex-start;
+}

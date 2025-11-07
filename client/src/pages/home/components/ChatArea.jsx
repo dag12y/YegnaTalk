@@ -9,7 +9,7 @@ export default function ChatArea() {
     const selectedUser = selectedChat.members.find((u) => u._id !== user._id);
     const dispatch = useDispatch();
     const [message, setMessage] = useState("");
-    const [allMessage, setAllMessage] = useState("");
+    const [allMessage, setAllMessage] = useState([]);
 
     async function sendMessage() {
         try {
@@ -43,7 +43,7 @@ export default function ChatArea() {
     async function getMessages() {
         try {
             dispatch(showLoader());
-            const response = await getAllMessages(selectedChat._id)
+            const response = await getAllMessages(selectedChat._id);
             dispatch(hideLoader());
 
             if (response.success) {
@@ -57,9 +57,9 @@ export default function ChatArea() {
         }
     }
 
-    useEffect(()=>{
-        getMessages()
-    },[selectedChat])
+    useEffect(() => {
+        getMessages();
+    }, [selectedChat]);
 
     return (
         <>
@@ -68,7 +68,31 @@ export default function ChatArea() {
                     <div className="app-chat-area-header">
                         {selectedUser.firstname + " " + selectedUser.lastname}
                     </div>
-                    <div className="main-chat-area">CHAT AREA</div>
+                    <div className="main-chat-area">
+                        {allMessage.map((msg) => {
+                            const isCurrentUserSender = msg.sender === user._id;
+                            return (
+                                <div
+                                    className="message-container"
+                                    style={
+                                        isCurrentUserSender
+                                            ? { justifyContent: "end" }
+                                            : { justifyContent: "start" }
+                                    }
+                                >
+                                    <div
+                                        className={
+                                            isCurrentUserSender
+                                                ? "send-message"
+                                                : "received-message"
+                                        }
+                                    >
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                     <div className="send-message-div">
                         <textarea
                             className="send-message-input"
