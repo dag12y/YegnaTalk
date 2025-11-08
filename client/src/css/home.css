@@ -409,6 +409,19 @@
   font-size: 13px;
 }
 
+.unread-message-counter{
+  text-align: center;
+  float: right;
+  font-size: 13px;
+  padding-top: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #007acc;
+  font-weight: bold;
+  color: white;
+}
+
 @media only screen and (max-width: 1000px) {
     .filter-user-details {
       display: none;

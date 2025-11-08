@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createNewChat } from "./../../../api/chat.js";
 import { hideLoader, showLoader } from "./../../../redux/loaderSlice.js";
 import { setAllChats, setSelectedChat } from "./../../../redux/userSlice.js";
-import moment from 'moment'
+import moment from "moment";
 
 export default function UserList({ search }) {
     const {
@@ -77,8 +77,7 @@ export default function UserList({ search }) {
         );
 
         if (!chat || !chat.lastMessage) return "";
-        return moment(chat?.lastMessage.createdAt).format('hh:mm A')
-        
+        return moment(chat?.lastMessage.createdAt).format("hh:mm A");
     }
 
     function getLastMessage(userId) {
@@ -94,6 +93,18 @@ export default function UserList({ search }) {
         const prefix = isCurrentUserSender ? "You: " : "";
 
         return `${prefix}${chat.lastMessage.text}`;
+    }
+
+    function getUnreadMessageCount(userId) {
+        const chat = allChats.find((chat) =>
+            chat.members.map((m) => m._id).includes(userId)
+        );
+
+        if (chat && chat.unreadMessageCount && chat.lastMessage.sender !==currentUser._id) {
+            return chat.unreadMessageCount;
+        } else {
+            return "";
+        }
     }
 
     return (
@@ -133,7 +144,12 @@ export default function UserList({ search }) {
                                     {getLastMessage(user._id) || user.email}
                                 </div>
                             </div>
-                            <div className="last-message-timestamp">{getLastMessageTimestamps(user._id)}</div>
+                            <div>
+                                {getUnreadMessageCount(user._id) && <div className="unread-message-counter">{getUnreadMessageCount(user._id)}</div>}
+                                <div className="last-message-timestamp">
+                                    {getLastMessageTimestamps(user._id)}
+                                </div>
+                            </div>
                             {!allChats.find((chat) =>
                                 chat.members
                                     .map((m) => m._id)
