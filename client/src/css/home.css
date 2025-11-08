@@ -405,6 +405,10 @@
 }
 
 
+.last-message-timestamp{
+  font-size: 13px;
+}
+
 @media only screen and (max-width: 1000px) {
     .filter-user-details {
       display: none;

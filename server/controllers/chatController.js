@@ -62,8 +62,11 @@ export async function getAllChat(req, res) {
     try {
         const userId = req.body.userId; // from JWT middleware
 
-        const allChats = await Chats.find({ members: { $in: [userId] } }).populate('members').sort({updatedAt:-1});
-            
+        const allChats = await Chats.find({ members: { $in: [userId] } })
+            .populate("members")
+            .populate("lastMessage")
+            .sort({ updatedAt: -1 });
+
         res.status(200).send({
             message: "Chats fetched successfully",
             success: true,

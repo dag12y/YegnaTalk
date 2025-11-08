@@ -1,13 +1,19 @@
-import {toast} from 'react-hot-toast'
+import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import {createNewChat} from './../../../api/chat.js'
-import {hideLoader, showLoader} from './../../../redux/loaderSlice.js'
-import {setAllChats,setSelectedChat} from './../../../redux/userSlice.js'
+import { createNewChat } from "./../../../api/chat.js";
+import { hideLoader, showLoader } from "./../../../redux/loaderSlice.js";
+import { setAllChats, setSelectedChat } from "./../../../redux/userSlice.js";
+import moment from 'moment'
 
 export default function UserList({ search }) {
-    const { allUsers, allChats ,user:currentUser,selectedChat} = useSelector((state) => state.userReducer);
+    const {
+        allUsers,
+        allChats,
+        user: currentUser,
+        selectedChat,
+    } = useSelector((state) => state.userReducer);
     const lowerSearch = search.toLowerCase();
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
 
     const filteredUsers = allUsers.filter((user) => {
         if (!search.trim()) {
@@ -26,17 +32,17 @@ export default function UserList({ search }) {
         return <div>No users found</div>;
     }
 
-    async function handleNewChat(searchedUserId){
+    async function handleNewChat(searchedUserId) {
         dispatch(showLoader);
-        let response = await createNewChat([currentUser._id,searchedUserId]);
-        dispatch(hideLoader)
+        let response = await createNewChat([currentUser._id, searchedUserId]);
+        dispatch(hideLoader);
         try {
-            if(response.success){
+            if (response.success) {
                 toast.success(response.message);
                 const newChat = response.data;
-                const updatedChat = [...allChats,newChat];
-                dispatch(setAllChats(updatedChat))
-                dispatch(setSelectedChat(newChat))
+                const updatedChat = [...allChats, newChat];
+                dispatch(setAllChats(updatedChat));
+                dispatch(setSelectedChat(newChat));
             }
         } catch (error) {
             toast.error(response.message);
@@ -44,22 +50,50 @@ export default function UserList({ search }) {
         }
     }
 
-    function openChat(selectedUserId){
-        const chat = allChats.find(chat=>
-            chat.members.map(m=>m._id).includes(currentUser._id) &&
-            chat.members.map(m=>m._id).includes(selectedUserId)
-        )
+    function openChat(selectedUserId) {
+        const chat = allChats.find(
+            (chat) =>
+                chat.members.map((m) => m._id).includes(currentUser._id) &&
+                chat.members.map((m) => m._id).includes(selectedUserId)
+        );
 
-        if(chat){
-            dispatch(setSelectedChat(chat))
+        if (chat) {
+            dispatch(setSelectedChat(chat));
         }
     }
 
-    const isSelectedChat = (user)=>{
-        if(selectedChat){
-            return selectedChat.members.map(u=>u._id).includes(user._id);
+    const isSelectedChat = (user) => {
+        if (selectedChat) {
+            return selectedChat.members.map((u) => u._id).includes(user._id);
         }
-        return false
+        return false;
+    };
+
+    function getLastMessageTimestamps(userId) {
+        const chat = allChats.find(
+            (chat) =>
+                chat.members.some((m) => m._id === userId) &&
+                chat.members.some((m) => m._id === currentUser._id)
+        );
+
+        if (!chat || !chat.lastMessage) return "";
+        return moment(chat?.lastMessage.createdAt).format('hh:mm A')
+        
+    }
+
+    function getLastMessage(userId) {
+        const chat = allChats.find(
+            (chat) =>
+                chat.members.some((m) => m._id === userId) &&
+                chat.members.some((m) => m._id === currentUser._id)
+        );
+
+        if (!chat || !chat.lastMessage) return "";
+
+        const isCurrentUserSender = chat.lastMessage.sender === currentUser._id;
+        const prefix = isCurrentUserSender ? "You: " : "";
+
+        return `${prefix}${chat.lastMessage.text}`;
     }
 
     return (
@@ -70,7 +104,13 @@ export default function UserList({ search }) {
                     className="user-search-filter"
                     onClick={() => openChat(user._id)}
                 >
-                    <div className={!isSelectedChat(user) ? "filtered-user":'selected-user'}>
+                    <div
+                        className={
+                            !isSelectedChat(user)
+                                ? "filtered-user"
+                                : "selected-user"
+                        }
+                    >
                         <div className="filter-user-display">
                             {user.profilePic ? (
                                 <img
@@ -90,9 +130,10 @@ export default function UserList({ search }) {
                                     {user.firstname} {user.lastname}
                                 </div>
                                 <div className="user-display-email">
-                                    {user.email}
+                                    {getLastMessage(user._id) || user.email}
                                 </div>
                             </div>
+                            <div className="last-message-timestamp">{getLastMessageTimestamps(user._id)}</div>
                             {!allChats.find((chat) =>
                                 chat.members
                                     .map((m) => m._id)
