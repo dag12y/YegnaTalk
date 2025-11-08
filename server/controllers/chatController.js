@@ -1,6 +1,6 @@
 import Chats from "./../models/chatModel.js";
-import User from "./../models/userModel.js";
-
+import Message from './.././models/messageModel.js'
+import messageModel from "./.././models/messageModel.js";
 // Create a new chat
 export async function createNewChat(req, res) {
     try {
@@ -77,5 +77,43 @@ export async function getAllChat(req, res) {
             message: error.message,
             success: false,
         });
+    }
+}
+
+// clearing unread message count
+export async function clearUnreadMessageCount(req,res) {
+    try {
+        const chatId=req.body.chatId;
+
+        //update in chat collection
+        const chat = Chats.findById(chatId)
+        if(!chat){
+            return res.send({
+                message:'No chat found with given chat id.',
+                success:false
+            })
+        }
+
+        const updatedChat =await Chats.findByIdAndUpdate(chatId,{unreadMessageCount:0},{new:true}).populate('members').populate('lastMessage');
+        //update read property to true
+        await Message.updateMany({
+            chatId:chatId,
+            read:false,
+
+
+        },{
+            read:true
+        })
+        
+        res.status(201).send({
+            message:"Unread message cleared successfully",
+            success:true,
+            data:updatedChat
+        })
+    } catch (error) {
+        res.status(400).send({
+            message:error.message,
+            success:false
+        })
     }
 }

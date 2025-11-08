@@ -17,3 +17,19 @@ export async function createNewChat(members) {
         return error;
     }
 }
+
+export async function clearUnreadMessageCount(chatId) {
+    try {
+        const response = await axiosInstance.post(
+            "/api/chat/clear-unread-message",
+            {
+                chatId, 
+            }
+        );
+        return response.data;
+    } catch (error) {
+        return (
+            error.response?.data || { success: false, message: error.message }
+        );
+    }
+}
