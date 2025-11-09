@@ -33,9 +33,9 @@ export default function UserList({ search }) {
     }
 
     async function handleNewChat(searchedUserId) {
-        dispatch(showLoader);
+        dispatch(showLoader());
         let response = await createNewChat([currentUser._id, searchedUserId]);
-        dispatch(hideLoader);
+        dispatch(hideLoader());
         try {
             if (response.success) {
                 toast.success(response.message);
@@ -53,9 +53,10 @@ export default function UserList({ search }) {
     function openChat(selectedUserId) {
         const chat = allChats.find(
             (chat) =>
-                chat.members.map((m) => m._id).includes(currentUser._id) &&
-                chat.members.map((m) => m._id).includes(selectedUserId)
+                chat.members.some((m) => m._id === currentUser._id) &&
+                chat.members.some((m) => m._id === selectedUserId)
         );
+
 
         if (chat) {
             dispatch(setSelectedChat(chat));
@@ -107,67 +108,105 @@ export default function UserList({ search }) {
         }
     }
 
+    const sortedUsers = [...filteredUsers].sort((a, b) => {
+        // Get each user's chat
+        const chatA = allChats.find(
+            (chat) =>
+                chat.members.some((m) => m._id === a._id) &&
+                chat.members.some((m) => m._id === currentUser._id)
+        );
+        const chatB = allChats.find(
+            (chat) =>
+                chat.members.some((m) => m._id === b._id) &&
+                chat.members.some((m) => m._id === currentUser._id)
+        );
+
+        // Extract timestamps safely
+        const timeA = chatA?.lastMessage?.createdAt
+            ? new Date(chatA.lastMessage.createdAt).getTime()
+            : 0;
+        const timeB = chatB?.lastMessage?.createdAt
+            ? new Date(chatB.lastMessage.createdAt).getTime()
+            : 0;
+
+        // Sort descending (newest first)
+        return timeB - timeA;
+    });
+
+
     return (
         <>
-            {filteredUsers.map((user) => (
-                <div
-                    key={user._id}
-                    className="user-search-filter"
-                    onClick={() => openChat(user._id)}
-                >
+            {sortedUsers.map((obj) => {
+                let user = obj;
+                if (obj.members) {
+                    user = obj.members.find((m) => m._id !== currentUser._id);
+                }
+                return (
                     <div
-                        className={
-                            !isSelectedChat(user)
-                                ? "filtered-user"
-                                : "selected-user"
-                        }
+                        key={user._id}
+                        className="user-search-filter"
+                        onClick={() => openChat(user._id)}
                     >
-                        <div className="filter-user-display">
-                            {user.profilePic ? (
-                                <img
-                                    src={user.profilePic}
-                                    alt="profile pic"
-                                    className="user-profile-image"
-                                />
-                            ) : (
-                                <div className="user-default-profile-pic">
-                                    {user.firstname[0]}
-                                    {user.lastname[0]}
-                                </div>
-                            )}
+                        <div
+                            className={
+                                !isSelectedChat(user)
+                                    ? "filtered-user"
+                                    : "selected-user"
+                            }
+                        >
+                            <div className="filter-user-display">
+                                {user.profilePic ? (
+                                    <img
+                                        src={user.profilePic}
+                                        alt="profile pic"
+                                        className="user-profile-image"
+                                    />
+                                ) : (
+                                    <div className="user-default-profile-pic">
+                                        {user.firstname[0]}
+                                        {user.lastname[0]}
+                                    </div>
+                                )}
 
-                            <div className="filter-user-details">
-                                <div className="user-display-name">
-                                    {user.firstname} {user.lastname}
+                                <div className="filter-user-details">
+                                    <div className="user-display-name">
+                                        {user.firstname} {user.lastname}
+                                    </div>
+                                    <div className="user-display-email">
+                                        {getLastMessage(user._id) || user.email}
+                                    </div>
                                 </div>
-                                <div className="user-display-email">
-                                    {getLastMessage(user._id) || user.email}
+                                <div>
+                                    {getUnreadMessageCount(user._id) && (
+                                        <div className="unread-message-counter">
+                                            {getUnreadMessageCount(user._id)}
+                                        </div>
+                                    )}
+                                    <div className="last-message-timestamp">
+                                        {getLastMessageTimestamps(user._id)}
+                                    </div>
                                 </div>
+                                {!allChats.find((chat) =>
+                                    chat.members
+                                        .map((m) => m._id)
+                                        .includes(user._id)
+                                ) && (
+                                    <div className="user-start-chat">
+                                        <button
+                                            className="user-start-chat-btn"
+                                            onClick={() =>
+                                                handleNewChat(user._id)
+                                            }
+                                        >
+                                            Start Chat
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                {getUnreadMessageCount(user._id) && <div className="unread-message-counter">{getUnreadMessageCount(user._id)}</div>}
-                                <div className="last-message-timestamp">
-                                    {getLastMessageTimestamps(user._id)}
-                                </div>
-                            </div>
-                            {!allChats.find((chat) =>
-                                chat.members
-                                    .map((m) => m._id)
-                                    .includes(user._id)
-                            ) && (
-                                <div className="user-start-chat">
-                                    <button
-                                        className="user-start-chat-btn"
-                                        onClick={() => handleNewChat(user._id)}
-                                    >
-                                        Start Chat
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </>
     );
 }
