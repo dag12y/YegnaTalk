@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Create HTTP server from Express app
-const server = createServer(app); 
+const server = createServer(app);
 
 const io = new Server(server, {
     // instantiate socket.io server
@@ -40,7 +40,13 @@ app.use("/api", verifyRouter);
 
 // Socket.io connection
 io.on("connection", (socket) => {
-    console.log("Socket connected:", socket.id);
+    socket.on("join-room", (userId) => {
+        socket.join(userId);
+                
+    });
+    socket.on('send-message',(data)=>{
+        socket.to(data.recipient).emit('receive-message',data.text)
+    })
 
     socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);
