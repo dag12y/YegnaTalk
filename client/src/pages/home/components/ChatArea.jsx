@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import moment from "moment";
 
-export default function ChatArea() {
+export default function ChatArea({ socket }) {
     const { selectedChat, user, allChats } = useSelector(
         (state) => state.userReducer
     );
@@ -28,9 +28,14 @@ export default function ChatArea() {
                 text: message,
             };
 
-            dispatch(showLoader());
+            socket.emit("send-message", {
+                ...formattedMessage,
+                members: selectedChat.members.map((m) => m._id),
+                read: false,
+                createdAt: moment().format("DD-MM-YYYY hh:mm:ss"),
+            });
+
             const response = await createNewMessage(formattedMessage);
-            dispatch(hideLoader());
 
             if (response.success) {
                 toast.success("Message sent!");
@@ -39,7 +44,6 @@ export default function ChatArea() {
                 toast.error(response.message);
             }
         } catch (error) {
-            dispatch(hideLoader());
             toast.error(error.message);
         }
     }
@@ -98,13 +102,15 @@ export default function ChatArea() {
 
     useEffect(() => {
         getMessages();
-       if (
-           selectedChat?.lastMessage &&
-           selectedChat.lastMessage.sender !== user._id
-       ) {
-           clearUnreadMessage();
-       }
-
+        if (
+            selectedChat?.lastMessage &&
+            selectedChat.lastMessage.sender !== user._id
+        ) {
+            clearUnreadMessage();
+        }
+        socket.off("receive-message").on("receive-message", (data) => {
+            setAllMessage((p) => [...p, data]);
+        });
     }, [selectedChat]);
 
     return (
@@ -140,7 +146,14 @@ export default function ChatArea() {
                                             {formatTime(msg.createdAt)}
                                             {isCurrentUserSender &&
                                                 msg.read && (
-                                                    <i className="fa fa-check-circle" aria-hidden='true' style={{color:'#0ea7e9ff', marginLeft:'5px'}}></i>
+                                                    <i
+                                                        className="fa fa-check-circle"
+                                                        aria-hidden="true"
+                                                        style={{
+                                                            color: "#0ea7e9ff",
+                                                            marginLeft: "5px",
+                                                        }}
+                                                    ></i>
                                                 )}
                                         </div>
                                     </div>

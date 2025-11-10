@@ -42,11 +42,13 @@ app.use("/api", verifyRouter);
 io.on("connection", (socket) => {
     socket.on("join-room", (userId) => {
         socket.join(userId);
-                
     });
-    socket.on('send-message',(data)=>{
-        socket.to(data.recipient).emit('receive-message',data.text)
-    })
+
+    socket.on("send-message", (message) => {
+        io.to(message.members[0])
+            .to(message.members[1])
+            .emit("receive-message", message);
+    });
 
     socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);
