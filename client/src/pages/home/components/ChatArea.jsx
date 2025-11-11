@@ -32,7 +32,7 @@ export default function ChatArea({ socket }) {
                 ...formattedMessage,
                 members: selectedChat.members.map((m) => m._id),
                 read: false,
-                createdAt: moment().format("DD-MM-YYYY hh:mm:ss"),
+                createdAt: moment().format("YYYY-MM-DD hh:mm:ss"),
             });
 
             const response = await createNewMessage(formattedMessage);
@@ -108,7 +108,7 @@ export default function ChatArea({ socket }) {
         ) {
             clearUnreadMessage();
         }
-        socket.off("receive-message").on("receive-message", (data) => {
+        socket.on("receive-message", (data) => {
             setAllMessage((p) => [...p, data]);
         });
     }, [selectedChat]);

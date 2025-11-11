@@ -4,16 +4,19 @@ import { createNewChat } from "./../../../api/chat.js";
 import { hideLoader, showLoader } from "./../../../redux/loaderSlice.js";
 import { setAllChats, setSelectedChat } from "./../../../redux/userSlice.js";
 import moment from "moment";
+import { useEffect } from "react";
+import store from "./../../../redux/store.js";
 
-export default function UserList({ search }) {
+export default function UserList({ search, socket }) {
     const {
         allUsers,
         allChats,
         user: currentUser,
         selectedChat,
     } = useSelector((state) => state.userReducer);
-    const lowerSearch = search.toLowerCase();
+
     const dispatch = useDispatch();
+    const lowerSearch = search.toLowerCase();
 
     const filteredUsers = allUsers.filter((user) => {
         if (!search.trim()) {
@@ -28,25 +31,49 @@ export default function UserList({ search }) {
         );
     });
 
-    if (filteredUsers.length === 0) {
-        return <div>No users found</div>;
-    }
+    useEffect(() => {
+        socket.on("receive-message", (message) => {
+            const selectedChat = store.getState().userReducer.selectedChat;
+            const allChats = store.getState().userReducer.allChats;
+
+            if (selectedChat?._id !== message.chatId) {
+                const updatedChats = allChats.map((chat) => {
+                    if (chat._id === message.chatId) {
+                        return {
+                            ...chat,
+                            unreadMessageCount:
+                                (chat?.unreadMessageCount || 0) + 1,
+                            lastMessage: message,
+                        };
+                    }
+                    return chat;
+                });
+                dispatch(setAllChats(updatedChats));
+            }
+        });
+    }, [socket, dispatch]);
 
     async function handleNewChat(searchedUserId) {
-        dispatch(showLoader());
-        let response = await createNewChat([currentUser._id, searchedUserId]);
-        dispatch(hideLoader());
         try {
+            dispatch(showLoader());
+            const response = await createNewChat([
+                currentUser._id,
+                searchedUserId,
+            ]);
+            dispatch(hideLoader());
+
             if (response.success) {
                 toast.success(response.message);
                 const newChat = response.data;
                 const updatedChat = [...allChats, newChat];
                 dispatch(setAllChats(updatedChat));
                 dispatch(setSelectedChat(newChat));
+            } else {
+                toast.error(response.message);
             }
         } catch (error) {
-            toast.error(response.message);
-            hideLoader();
+            dispatch(hideLoader());
+            toast.error(error.message);
         }
     }
 
@@ -56,19 +83,15 @@ export default function UserList({ search }) {
                 chat.members.some((m) => m._id === currentUser._id) &&
                 chat.members.some((m) => m._id === selectedUserId)
         );
-
-
         if (chat) {
             dispatch(setSelectedChat(chat));
         }
     }
 
-    const isSelectedChat = (user) => {
-        if (selectedChat) {
-            return selectedChat.members.map((u) => u._id).includes(user._id);
-        }
-        return false;
-    };
+    const isSelectedChat = (user) =>
+        selectedChat
+            ? selectedChat.members.map((u) => u._id).includes(user._id)
+            : false;
 
     function getLastMessageTimestamps(userId) {
         const chat = allChats.find(
@@ -77,8 +100,8 @@ export default function UserList({ search }) {
                 chat.members.some((m) => m._id === currentUser._id)
         );
 
-        if (!chat || !chat.lastMessage) return "";
-        return moment(chat?.lastMessage.createdAt).format("hh:mm A");
+        if (!chat?.lastMessage) return "";
+        return moment(chat.lastMessage.createdAt).format("hh:mm A");
     }
 
     function getLastMessage(userId) {
@@ -87,12 +110,10 @@ export default function UserList({ search }) {
                 chat.members.some((m) => m._id === userId) &&
                 chat.members.some((m) => m._id === currentUser._id)
         );
-
-        if (!chat || !chat.lastMessage) return "";
+        if (!chat?.lastMessage) return "";
 
         const isCurrentUserSender = chat.lastMessage.sender === currentUser._id;
         const prefix = isCurrentUserSender ? "You: " : "";
-
         return `${prefix}${chat.lastMessage.text}`;
     }
 
@@ -100,16 +121,17 @@ export default function UserList({ search }) {
         const chat = allChats.find((chat) =>
             chat.members.map((m) => m._id).includes(userId)
         );
-
-        if (chat && chat.unreadMessageCount && chat.lastMessage.sender !==currentUser._id) {
+        if (
+            chat &&
+            chat.unreadMessageCount &&
+            chat.lastMessage.sender !== currentUser._id
+        ) {
             return chat.unreadMessageCount;
-        } else {
-            return "";
         }
+        return "";
     }
 
     const sortedUsers = [...filteredUsers].sort((a, b) => {
-        // Get each user's chat
         const chatA = allChats.find(
             (chat) =>
                 chat.members.some((m) => m._id === a._id) &&
@@ -121,7 +143,6 @@ export default function UserList({ search }) {
                 chat.members.some((m) => m._id === currentUser._id)
         );
 
-        // Extract timestamps safely
         const timeA = chatA?.lastMessage?.createdAt
             ? new Date(chatA.lastMessage.createdAt).getTime()
             : 0;
@@ -129,10 +150,12 @@ export default function UserList({ search }) {
             ? new Date(chatB.lastMessage.createdAt).getTime()
             : 0;
 
-        // Sort descending (newest first)
         return timeB - timeA;
     });
 
+    if (filteredUsers.length === 0) {
+        return <div>No users found</div>;
+    }
 
     return (
         <>
@@ -176,6 +199,7 @@ export default function UserList({ search }) {
                                         {getLastMessage(user._id) || user.email}
                                     </div>
                                 </div>
+
                                 <div>
                                     {getUnreadMessageCount(user._id) && (
                                         <div className="unread-message-counter">
@@ -186,6 +210,7 @@ export default function UserList({ search }) {
                                         {getLastMessageTimestamps(user._id)}
                                     </div>
                                 </div>
+
                                 {!allChats.find((chat) =>
                                     chat.members
                                         .map((m) => m._id)
@@ -194,9 +219,10 @@ export default function UserList({ search }) {
                                     <div className="user-start-chat">
                                         <button
                                             className="user-start-chat-btn"
-                                            onClick={() =>
-                                                handleNewChat(user._id)
-                                            }
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleNewChat(user._id);
+                                            }}
                                         >
                                             Start Chat
                                         </button>
