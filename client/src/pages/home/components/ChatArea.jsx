@@ -113,6 +113,11 @@ export default function ChatArea({ socket }) {
         });
     }, [selectedChat]);
 
+    useEffect(()=>{
+        const msgContainer = document.getElementById("main-chat-area");
+        msgContainer.scrollTop=msgContainer.scrollHeight
+    },[allMessage])
+
     return (
         <>
             {selectedChat && (
@@ -120,7 +125,7 @@ export default function ChatArea({ socket }) {
                     <div className="app-chat-area-header">
                         {selectedUser.firstname + " " + selectedUser.lastname}
                     </div>
-                    <div className="main-chat-area">
+                    <div className="main-chat-area" id="main-chat-area">
                         {allMessage.map((msg) => {
                             const isCurrentUserSender = msg.sender === user._id;
                             return (
