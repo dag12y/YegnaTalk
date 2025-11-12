@@ -86,7 +86,7 @@ export async function clearUnreadMessageCount(req,res) {
         const chatId=req.body.chatId;
 
         //update in chat collection
-        const chat = Chats.findById(chatId)
+        const chat = await Chats.findById(chatId)
         if(!chat){
             return res.send({
                 message:'No chat found with given chat id.',

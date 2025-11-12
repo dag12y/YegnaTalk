@@ -50,6 +50,12 @@ io.on("connection", (socket) => {
             .emit("receive-message", message);
     });
 
+    socket.on("clear-unread-message", (data) => {
+        io.to(data.members[0])
+            .to(data.members[1])
+            .emit("message-count-cleared", data);
+    });
+
     socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);
     });

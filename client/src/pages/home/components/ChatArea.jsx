@@ -5,6 +5,8 @@ import { clearUnreadMessageCount } from "../../../api/chat";
 import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import moment from "moment";
+import store from "../../../redux/store";
+import { setAllChats } from "../../../redux/userSlice";
 
 export default function ChatArea({ socket }) {
     const { selectedChat, user, allChats } = useSelector(
@@ -67,9 +69,11 @@ export default function ChatArea({ socket }) {
 
     async function clearUnreadMessage() {
         try {
-            dispatch(showLoader());
+            socket.emit("clear-unread-message", {
+                chatId: selectedChat._id,
+                members: selectedChat.members.map((m) => m._id),
+            });
             const response = await clearUnreadMessageCount(selectedChat._id);
-            dispatch(hideLoader());
 
             if (response.success) {
                 allChats.map((chat) => {
@@ -82,7 +86,6 @@ export default function ChatArea({ socket }) {
                 toast.error(response.message);
             }
         } catch (error) {
-            dispatch(hideLoader());
             toast.error(error.message);
         }
     }
@@ -108,15 +111,48 @@ export default function ChatArea({ socket }) {
         ) {
             clearUnreadMessage();
         }
-        socket.on("receive-message", (data) => {
-            setAllMessage((p) => [...p, data]);
+        socket.on("receive-message", (message) => {
+            const selectedChat = store.getState().userReducer.selectedChat;
+            if (selectedChat._id === message.chatId) {
+                setAllMessage((p) => [...p, message]);
+            }
+            if (
+                selectedChat._id === message.chatId &&
+                message.sender !== user._id
+            ) {
+                clearUnreadMessage();
+            }
+        });
+
+        socket.on("message-count-cleared", (data) => {
+            const selectedChat = store.getState().userReducer.selectedChat;
+            const allChats = store.getState().userReducer.allChats;
+
+            if(selectedChat._id === data.chatId){
+                //updating unread message count in chat object
+                const updatedChats = allChats.map(chat=>{
+                    if(chat._id === data.chatId){
+                        return { ...chat, unreadMessageCount: 0 };
+                    }
+                    return chat;
+                })
+
+                dispatch(setAllChats(updatedChats))
+
+                // updating read property in message object
+                setAllMessage(p=>{
+                    return p.map(msg=>{
+                        return {...msg,read:true}
+                    })
+                })
+            }
         });
     }, [selectedChat]);
 
-    useEffect(()=>{
+    useEffect(() => {
         const msgContainer = document.getElementById("main-chat-area");
-        msgContainer.scrollTop=msgContainer.scrollHeight
-    },[allMessage])
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+    }, [allMessage]);
 
     return (
         <>
