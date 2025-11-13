@@ -42,6 +42,25 @@ export default function ChatArea({ socket }) {
             if (response.success) {
                 toast.success("Message sent!");
                 setMessage("");
+
+                // Use the latest allChats from Redux store
+                const latestAllChats = store.getState().userReducer.allChats;
+
+                const updatedChats = latestAllChats.map((chat) =>
+                    chat._id === selectedChat._id
+                        ? { ...chat, lastMessage: response.data } // use backend message with _id
+                        : chat
+                );
+
+                // Move the chat to top
+                const latestChat = updatedChats.find(
+                    (chat) => chat._id === selectedChat._id
+                );
+                const otherChats = updatedChats.filter(
+                    (chat) => chat._id !== selectedChat._id
+                );
+
+                dispatch(setAllChats([latestChat, ...otherChats]));
             } else {
                 toast.error(response.message);
             }
