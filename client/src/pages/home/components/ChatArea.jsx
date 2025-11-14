@@ -18,6 +18,8 @@ export default function ChatArea({ socket }) {
     const [allMessage, setAllMessage] = useState([]);
     const [isTyping,setIsTyping]=useState(false)
     const typingTimeoutRef = useRef(null);
+    const typingThrottleRef = useRef(false);
+
 
 
     async function sendMessage() {
@@ -263,13 +265,24 @@ export default function ChatArea({ socket }) {
                             value={message}
                             onChange={(e) => {
                                 setMessage(e.target.value);
-                                socket.emit("user-typing", {
-                                    chatId: selectedChat._id,
-                                    members: selectedChat.members.map(
-                                        (m) => m._id
-                                    ),
-                                    sender: user._id,
-                                });
+
+                                // --- Throttle socket emit ---
+                                if (!typingThrottleRef.current) {
+                                    socket.emit("user-typing", {
+                                        chatId: selectedChat._id,
+                                        members: selectedChat.members.map(
+                                            (m) => m._id
+                                        ),
+                                        sender: user._id,
+                                    });
+
+                                    typingThrottleRef.current = true;
+
+                                    // Allow another emit after 300ms
+                                    setTimeout(() => {
+                                        typingThrottleRef.current = false;
+                                    }, 300);
+                                }
                             }}
                             rows={1}
                             onInput={(e) => {
