@@ -3,12 +3,13 @@ import { createNewMessage, getAllMessages } from "../../../api/message";
 import { showLoader, hideLoader } from "./../../../redux/loaderSlice";
 import { clearUnreadMessageCount } from "../../../api/chat";
 import { toast } from "react-hot-toast";
-import { useEffect, useState ,useRef} from "react";
+import { useEffect, useState, useRef } from "react";
 import moment from "moment";
 import store from "../../../redux/store";
 import { setAllChats } from "../../../redux/userSlice";
+import EmojiPicker from "emoji-picker-react";
 
-export default function ChatArea({ socket,onlineUsers }) {
+export default function ChatArea({ socket, onlineUsers }) {
     const { selectedChat, user, allChats } = useSelector(
         (state) => state.userReducer
     );
@@ -16,11 +17,10 @@ export default function ChatArea({ socket,onlineUsers }) {
     const dispatch = useDispatch();
     const [message, setMessage] = useState("");
     const [allMessage, setAllMessage] = useState([]);
-    const [isTyping,setIsTyping]=useState(false)
+    const [isTyping, setIsTyping] = useState(false);
     const typingTimeoutRef = useRef(null);
     const typingThrottleRef = useRef(false);
-
-
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     async function sendMessage() {
         try {
@@ -47,6 +47,7 @@ export default function ChatArea({ socket,onlineUsers }) {
             if (response.success) {
                 toast.success("Message sent!");
                 setMessage("");
+                setShowEmojiPicker(false)
 
                 // Use the latest allChats from Redux store
                 const latestAllChats = store.getState().userReducer.allChats;
@@ -152,23 +153,23 @@ export default function ChatArea({ socket,onlineUsers }) {
             const selectedChat = store.getState().userReducer.selectedChat;
             const allChats = store.getState().userReducer.allChats;
 
-            if(selectedChat._id === data.chatId){
+            if (selectedChat._id === data.chatId) {
                 //updating unread message count in chat object
-                const updatedChats = allChats.map(chat=>{
-                    if(chat._id === data.chatId){
+                const updatedChats = allChats.map((chat) => {
+                    if (chat._id === data.chatId) {
                         return { ...chat, unreadMessageCount: 0 };
                     }
                     return chat;
-                })
+                });
 
-                dispatch(setAllChats(updatedChats))
+                dispatch(setAllChats(updatedChats));
 
                 // updating read property in message object
-                setAllMessage(p=>{
-                    return p.map(msg=>{
-                        return {...msg,read:true}
-                    })
-                })
+                setAllMessage((p) => {
+                    return p.map((msg) => {
+                        return { ...msg, read: true };
+                    });
+                });
             }
         });
 
@@ -187,8 +188,6 @@ export default function ChatArea({ socket,onlineUsers }) {
                 }, 2000);
             }
         });
-
-
     }, [selectedChat]);
 
     useEffect(() => {
@@ -261,6 +260,13 @@ export default function ChatArea({ socket,onlineUsers }) {
                             );
                         })}
                     </div>
+                    <div>
+                        {showEmojiPicker && (
+                            <EmojiPicker
+                                onEmojiClick={(e) => setMessage(message + e.emoji)}
+                            ></EmojiPicker>
+                        )}
+                    </div>
                     <div className="send-message-div">
                         <textarea
                             className="send-message-input"
@@ -294,7 +300,13 @@ export default function ChatArea({ socket,onlineUsers }) {
                                     e.target.scrollHeight + "px";
                             }}
                         />
-
+                        <button
+                            className="fa fa-smile-o send-emoji-btn"
+                            aria-hidden="true"
+                            onClick={() => {
+                                setShowEmojiPicker(!showEmojiPicker);
+                            }}
+                        ></button>
                         <button
                             className="fa fa-paper-plane send-message-btn"
                             aria-hidden="true"

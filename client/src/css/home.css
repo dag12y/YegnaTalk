@@ -340,7 +340,18 @@
 /* SEND BUTTON */
 .send-message-btn {
     position: absolute;
-    right: 25px;
+    right: 30px;
+    font-size: 22px;
+    color: #0099ff;
+    cursor: pointer;
+    transition: 0.3s ease;
+    background: none;
+    border: none;
+}
+
+.send-emoji-btn {
+    position: absolute;
+    right: 60px;
     font-size: 22px;
     color: #0099ff;
     cursor: pointer;
@@ -350,6 +361,10 @@
 }
 
 .send-message-btn:hover {
+    color: #0066cc;
+    transform: scale(1.1);
+}
+.send-emoji-btn:hover {
     color: #0066cc;
     transform: scale(1.1);
 }
