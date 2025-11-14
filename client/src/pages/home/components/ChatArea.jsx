@@ -8,7 +8,7 @@ import moment from "moment";
 import store from "../../../redux/store";
 import { setAllChats } from "../../../redux/userSlice";
 
-export default function ChatArea({ socket }) {
+export default function ChatArea({ socket,onlineUsers }) {
     const { selectedChat, user, allChats } = useSelector(
         (state) => state.userReducer
     );
@@ -205,6 +205,9 @@ export default function ChatArea({ socket }) {
                             {selectedUser.firstname +
                                 " " +
                                 selectedUser.lastname}
+                            {onlineUsers.includes(selectedUser._id) && (
+                                <span className="online-dot"></span>
+                            )}
                         </div>
 
                         {isTyping && (

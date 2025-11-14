@@ -7,7 +7,7 @@ import moment from "moment";
 import { useEffect } from "react";
 import store from "./../../../redux/store.js";
 
-export default function UserList({ search, socket }) {
+export default function UserList({ search, socket ,onlineUsers}) {
     const {
         allUsers,
         allChats,
@@ -187,9 +187,21 @@ export default function UserList({ search, socket }) {
                                         src={user.profilePic}
                                         alt="profile pic"
                                         className="user-profile-image"
+                                        style={
+                                            onlineUsers.includes(user._id)
+                                                ? { border: "green 3px solid" }
+                                                : {}
+                                        }
                                     />
                                 ) : (
-                                    <div className="user-default-profile-pic">
+                                    <div
+                                        className="user-default-profile-pic"
+                                        style={
+                                            onlineUsers.includes(user._id)
+                                                ? { border: "#4ade80 4px solid" }
+                                                : {}
+                                        }
+                                    >
                                         {user.firstname[0]}
                                         {user.lastname[0]}
                                     </div>

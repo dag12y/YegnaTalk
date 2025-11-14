@@ -16,6 +16,7 @@ connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const onlineUser = []
 
 // Middleware
 app.use(express.json());
@@ -58,6 +59,13 @@ io.on("connection", (socket) => {
 
     socket.on("user-typing", (data) => {
         io.to(data.members[0]).to(data.members[1]).emit("started-typing", data);
+    });
+
+    socket.on("user-logged-in",userId=>{
+        if(!onlineUser.includes(userId)){
+            onlineUser.push(userId)
+        }
+        socket.emit('online-users',onlineUser)
     });
 
     socket.on("disconnect", () => {
