@@ -21,6 +21,12 @@ export default function ChatArea({ socket, onlineUsers }) {
     const typingTimeoutRef = useRef(null);
     const typingThrottleRef = useRef(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const selectedChatRef = useRef(selectedChat);
+
+    useEffect(() => {
+        selectedChatRef.current = selectedChat;
+    }, [selectedChat]);
+
 
     async function sendMessage() {
         try {
@@ -173,21 +179,25 @@ export default function ChatArea({ socket, onlineUsers }) {
             }
         });
 
-        socket.on("started-typing", (data) => {
-            if (selectedChat._id === data.chatId && user._id !== data.sender) {
-                setIsTyping(true);
+       socket.on("started-typing", (data) => {
+           const currentChat = selectedChatRef.current;
+           if (!currentChat) return;
 
-                // Reset old timer
-                if (typingTimeoutRef.current) {
-                    clearTimeout(typingTimeoutRef.current);
-                }
+           // Only show typing if the typing event is for the currently opened chat
+           if (currentChat._id === data.chatId && user._id !== data.sender) {
+               setIsTyping(true);
 
-                // Start a new timeout
-                typingTimeoutRef.current = setTimeout(() => {
-                    setIsTyping(false);
-                }, 2000);
-            }
-        });
+               // Reset old timer
+               if (typingTimeoutRef.current) {
+                   clearTimeout(typingTimeoutRef.current);
+               }
+
+               typingTimeoutRef.current = setTimeout(() => {
+                   setIsTyping(false);
+               }, 2000);
+           }
+       });
+
     }, [selectedChat]);
 
     useEffect(() => {

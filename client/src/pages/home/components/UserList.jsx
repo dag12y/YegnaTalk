@@ -21,7 +21,7 @@ export default function UserList({ search, socket ,onlineUsers}) {
     const filteredUsers = allUsers.filter((user) => {
         if (!search.trim()) {
             return allChats.some((chat) =>
-                chat.members.map((m) => m._id).includes(user._id)
+                chat.members?.map((m) => m._id).includes(user._id)
             );
         }
 
