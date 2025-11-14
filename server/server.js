@@ -56,6 +56,10 @@ io.on("connection", (socket) => {
             .emit("message-count-cleared", data);
     });
 
+    socket.on("user-typing", (data) => {
+        io.to(data.members[0]).to(data.members[1]).emit("started-typing", data);
+    });
+
     socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);
     });

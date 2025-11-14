@@ -3,7 +3,7 @@ import { createNewMessage, getAllMessages } from "../../../api/message";
 import { showLoader, hideLoader } from "./../../../redux/loaderSlice";
 import { clearUnreadMessageCount } from "../../../api/chat";
 import { toast } from "react-hot-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState ,useRef} from "react";
 import moment from "moment";
 import store from "../../../redux/store";
 import { setAllChats } from "../../../redux/userSlice";
@@ -16,6 +16,9 @@ export default function ChatArea({ socket }) {
     const dispatch = useDispatch();
     const [message, setMessage] = useState("");
     const [allMessage, setAllMessage] = useState([]);
+    const [isTyping,setIsTyping]=useState(false)
+    const typingTimeoutRef = useRef(null);
+
 
     async function sendMessage() {
         try {
@@ -166,6 +169,24 @@ export default function ChatArea({ socket }) {
                 })
             }
         });
+
+        socket.on("started-typing", (data) => {
+            if (selectedChat._id === data.chatId && user._id !== data.sender) {
+                setIsTyping(true);
+
+                // Reset old timer
+                if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                }
+
+                // Start a new timeout
+                typingTimeoutRef.current = setTimeout(() => {
+                    setIsTyping(false);
+                }, 2000);
+            }
+        });
+
+
     }, [selectedChat]);
 
     useEffect(() => {
@@ -178,7 +199,21 @@ export default function ChatArea({ socket }) {
             {selectedChat && (
                 <div className="app-chat-area">
                     <div className="app-chat-area-header">
-                        {selectedUser.firstname + " " + selectedUser.lastname}
+                        <div className="chat-header-user">
+                            {selectedUser.firstname +
+                                " " +
+                                selectedUser.lastname}
+                        </div>
+
+                        {isTyping && (
+                            <div className="chat-header-typing">
+                                <div className="typing-indicator-header">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <div className="main-chat-area" id="main-chat-area">
                         {allMessage.map((msg) => {
@@ -226,7 +261,16 @@ export default function ChatArea({ socket }) {
                             className="send-message-input"
                             placeholder="Type a message"
                             value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            onChange={(e) => {
+                                setMessage(e.target.value);
+                                socket.emit("user-typing", {
+                                    chatId: selectedChat._id,
+                                    members: selectedChat.members.map(
+                                        (m) => m._id
+                                    ),
+                                    sender: user._id,
+                                });
+                            }}
                             rows={1}
                             onInput={(e) => {
                                 e.target.style.height = "auto";

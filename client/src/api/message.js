@@ -15,7 +15,7 @@ export async function createNewMessage(message) {
 export async function getAllMessages(chatId) {
     try {
         const response = await axiosInstance.get(
-            `api/message/get-all-messages/${chatId}`
+            `/api/message/get-all-messages/${chatId}`
         );
         return response.data;
     } catch (error) {
