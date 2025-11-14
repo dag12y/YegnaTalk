@@ -18,3 +18,23 @@ export async function getAllUsers() {
         return error;
     }
 }
+export async function uploadProfilePic(file, userId) {
+    try {
+        const formData = new FormData();
+        formData.append("image", file); 
+        formData.append("userId", userId);
+
+        const response = await axiosInstance.post(
+            "/api/user/upload-profile-pic",
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+}

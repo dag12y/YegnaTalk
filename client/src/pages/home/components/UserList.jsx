@@ -182,9 +182,9 @@ export default function UserList({ search, socket ,onlineUsers}) {
                             }
                         >
                             <div className="filter-user-display">
-                                {user.profilePic ? (
+                                {user.profile ? (
                                     <img
-                                        src={user.profilePic}
+                                        src={user.profile}
                                         alt="profile pic"
                                         className="user-profile-image"
                                         style={

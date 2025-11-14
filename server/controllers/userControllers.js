@@ -38,30 +38,42 @@ export async function getAllUsers(req,res) {
     }
 }
 
-export async function uploadProfilePic(req,res) {
+export async function uploadProfilePic(req, res) {
     try {
-        const image = req.body.image;
+        if (!req.file) throw new Error("No file uploaded");
 
-        //upload image to cloudinary
-        const uploadedImage = await cloudinary.uploader.upload(image,{
-            folder:'YegnaTalk',
-        })
-        //update the user model and set profile property
+        const streamUpload = (reqFile) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { folder: "YegnaTalk" },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                stream.end(reqFile.buffer);
+            });
+        };
+
+        const result = await streamUpload(req.file);
+
         const user = await User.findByIdAndUpdate(
-            {_id:req.body.userId},
-            {profile:uploadedImage.secure_url},
-            {new:true}
-        )
+            req.body.userId,
+            { profile: result.secure_url },
+            { new: true }
+        );
 
         res.status(201).send({
-            message:'Profile picture uploaded successfully.',
-            success:true,
-            data:user
-        })
+            message: "Profile picture uploaded successfully",
+            success: true,
+            data: user,
+        });
     } catch (error) {
         res.status(400).send({
-            message:error.message,
-            success:false
-        })
+            message: error.message,
+            success: false,
+        });
     }
 }
+
+

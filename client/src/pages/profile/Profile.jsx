@@ -1,18 +1,21 @@
 import "./../../css/profile.css";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import { uploadProfilePic } from "../../api/user";
+import { hideLoader, showLoader } from "./../../redux/loaderSlice";
+import { toast } from "react-hot-toast";
+import {setUser} from './../../redux/userSlice'
 
 export default function Profile() {
     const { user } = useSelector((state) => state.userReducer);
-    const [image, setImage] = useState("");
+    const [image, setImage] = useState(""); // for preview
+    const [selectedFile, setSelectedFile] = useState(null); // store the file
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        if (user?.profile) {
-            setImage(user.profile);
-        }
+        if (user?.profile) setImage(user.profile);
     }, [user]);
-
     function getInitials() {
         if (!user) return "";
         const f = user.firstname ? user.firstname.charAt(0).toUpperCase() : "";
@@ -37,11 +40,38 @@ export default function Profile() {
         const file = e.target.files[0];
         if (!file) return;
 
+        setSelectedFile(file); // store file for upload
+
         const reader = new FileReader();
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file); // preview
         reader.onloadend = () => {
             setImage(reader.result);
         };
+    }
+
+    async function updateProfilePic() {
+        if (!selectedFile) {
+            toast.error("Please select an image first");
+            return;
+        }
+
+        try {
+            dispatch(showLoader());
+
+            const response = await uploadProfilePic(selectedFile, user._id);
+
+            dispatch(hideLoader());
+
+            if (response.success) {
+                toast.success(response.message);
+                dispatch(setUser(response.data));
+            } else {
+                toast.error(response.message);
+            }
+        } catch (error) {
+            toast.error(error.message);
+            dispatch(hideLoader());
+        }
     }
 
     return (
@@ -78,6 +108,12 @@ export default function Profile() {
                         accept="image/*"
                         onChange={onFileSelect}
                     />
+                    <button
+                        className="upload-image-btn"
+                        onClick={updateProfilePic}
+                    >
+                        Upload
+                    </button>
                 </div>
             </div>
         </div>

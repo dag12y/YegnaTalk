@@ -35,7 +35,24 @@ export default function Header() {
             </div>
             <div className="app-user-profile">
                 <div className="logged-user-name">{getFullName()}</div>
-                <div className="logged-user-profile-pic" onClick={()=>navigate('/profile')}>{getInitials()}</div>
+
+                {!user?.profile && (
+                    <div
+                        className="logged-user-profile-pic"
+                        onClick={() => navigate("/profile")}
+                    >
+                        {getInitials()}
+                    </div>
+                )}
+
+                {user?.profile && (
+                    <img
+                        src={user?.profile}
+                        alt="profile pic"
+                        className="logged-user-profile-image"
+                        onClick={() => navigate("/profile")}
+                    />
+                )}
             </div>
         </div>
     );
