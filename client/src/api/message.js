@@ -22,3 +22,16 @@ export async function getAllMessages(chatId) {
         return error;
     }
 }
+
+export async function sendImageMessage(data) {
+    try {
+        const response = await axiosInstance.post(
+            "/api/message/send-image",
+            data
+        );
+        return response.data;
+    } catch (err) {
+        return err.response?.data || { success: false, message: err.message };
+    }
+}
+

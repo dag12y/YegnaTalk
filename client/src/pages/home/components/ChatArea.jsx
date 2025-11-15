@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { createNewMessage, getAllMessages } from "../../../api/message";
+import { createNewMessage, getAllMessages,sendImageMessage } from "../../../api/message";
 import { showLoader, hideLoader } from "./../../../redux/loaderSlice";
 import { clearUnreadMessageCount } from "../../../api/chat";
 import { toast } from "react-hot-toast";
@@ -22,64 +22,81 @@ export default function ChatArea({ socket, onlineUsers }) {
     const typingThrottleRef = useRef(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const selectedChatRef = useRef(selectedChat);
+    const [selectedImage, setSelectedImage] = useState(null);
+
 
     useEffect(() => {
         selectedChatRef.current = selectedChat;
     }, [selectedChat]);
 
 
-    async function sendMessage() {
-        try {
-            if (!message.trim()) {
-                toast.error("Message cannot be empty");
-                return;
-            }
+   async function sendMessage() {
+       if (!message.trim() && !selectedImage) {
+           toast.error("Message cannot be empty");
+           return;
+       }
 
-            const formattedMessage = {
-                chatId: selectedChat._id,
-                sender: user._id,
-                text: message,
-            };
+       let imageUrl = null;
 
-            socket.emit("send-message", {
-                ...formattedMessage,
-                members: selectedChat.members.map((m) => m._id),
-                read: false,
-                createdAt: moment().format("YYYY-MM-DD hh:mm:ss"),
-            });
+       if (selectedImage) {
+           const formData = new FormData();
+           formData.append("image", selectedImage);
+           formData.append("chatId", selectedChat._id);
 
-            const response = await createNewMessage(formattedMessage);
+           dispatch(showLoader());
+           const response = await sendImageMessage(formData);
+           dispatch(hideLoader());
 
-            if (response.success) {
-                toast.success("Message sent!");
-                setMessage("");
-                setShowEmojiPicker(false)
+           if (response.success) {
+               imageUrl = response.data.image;
+           } else {
+               toast.error(response.message);
+               return;
+           }
+       }
 
-                // Use the latest allChats from Redux store
-                const latestAllChats = store.getState().userReducer.allChats;
+       const formattedMessage = {
+           chatId: selectedChat._id,
+           sender: user._id,
+           text: message,
+           image: imageUrl,
+       };
 
-                const updatedChats = latestAllChats.map((chat) =>
-                    chat._id === selectedChat._id
-                        ? { ...chat, lastMessage: response.data } // use backend message with _id
-                        : chat
-                );
+       socket.emit("send-message", {
+           ...formattedMessage,
+           members: selectedChat.members.map((m) => m._id),
+           read: false,
+           createdAt: moment().format("YYYY-MM-DD hh:mm:ss"),
+       });
 
-                // Move the chat to top
-                const latestChat = updatedChats.find(
-                    (chat) => chat._id === selectedChat._id
-                );
-                const otherChats = updatedChats.filter(
-                    (chat) => chat._id !== selectedChat._id
-                );
+       const response = await createNewMessage(formattedMessage);
 
-                dispatch(setAllChats([latestChat, ...otherChats]));
-            } else {
-                toast.error(response.message);
-            }
-        } catch (error) {
-            toast.error(error.message);
-        }
-    }
+       if (response.success) {
+           toast.success("Message sent!");
+           setMessage("");
+           setSelectedImage(null); 
+           setShowEmojiPicker(false);
+
+           const latestAllChats = store.getState().userReducer.allChats;
+           const updatedChats = latestAllChats.map((chat) =>
+               chat._id === selectedChat._id
+                   ? { ...chat, lastMessage: response.data }
+                   : chat
+           );
+
+           const latestChat = updatedChats.find(
+               (chat) => chat._id === selectedChat._id
+           );
+           const otherChats = updatedChats.filter(
+               (chat) => chat._id !== selectedChat._id
+           );
+
+           dispatch(setAllChats([latestChat, ...otherChats]));
+       } else {
+           toast.error(response.message);
+       }
+   }
+
 
     async function getMessages() {
         try {
@@ -134,6 +151,13 @@ export default function ChatArea({ socket, onlineUsers }) {
         }
     }
 
+    function handleSelectImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setSelectedImage(file);
+    }
+
     useEffect(() => {
         getMessages();
         if (
@@ -160,7 +184,6 @@ export default function ChatArea({ socket, onlineUsers }) {
             const allChats = store.getState().userReducer.allChats;
 
             if (selectedChat._id === data.chatId) {
-                //updating unread message count in chat object
                 const updatedChats = allChats.map((chat) => {
                     if (chat._id === data.chatId) {
                         return { ...chat, unreadMessageCount: 0 };
@@ -170,7 +193,6 @@ export default function ChatArea({ socket, onlineUsers }) {
 
                 dispatch(setAllChats(updatedChats));
 
-                // updating read property in message object
                 setAllMessage((p) => {
                     return p.map((msg) => {
                         return { ...msg, read: true };
@@ -250,6 +272,14 @@ export default function ChatArea({ socket, onlineUsers }) {
                                             }
                                         >
                                             {msg.text}
+                                            {msg.image && (
+                                                <img
+                                                    src={msg.image}
+                                                    width={"120"}
+                                                    height={"120"}
+                                                    alt="image"
+                                                />
+                                            )}
                                         </div>
                                         <div className="messages-timestamps">
                                             {formatTime(msg.createdAt)}
@@ -273,36 +303,36 @@ export default function ChatArea({ socket, onlineUsers }) {
                     <div>
                         {showEmojiPicker && (
                             <EmojiPicker
-                                onEmojiClick={(e) => setMessage(message + e.emoji)}
+                                onEmojiClick={(e) =>
+                                    setMessage(message + e.emoji)
+                                }
                             ></EmojiPicker>
                         )}
                     </div>
                     <div className="send-message-div">
+                        {selectedImage && (
+                            <div className="image-preview">
+                                <img
+                                    src={URL.createObjectURL(selectedImage)}
+                                    alt="preview"
+                                    width={100}
+                                    height={100}
+                                    style={{
+                                        borderRadius: "8px",
+                                        objectFit: "cover",
+                                    }}
+                                />
+                                <button onClick={() => setSelectedImage(null)}>
+                                    ×
+                                </button>
+                            </div>
+                        )}
+
                         <textarea
                             className="send-message-input"
                             placeholder="Type a message"
                             value={message}
-                            onChange={(e) => {
-                                setMessage(e.target.value);
-
-                                // --- Throttle socket emit ---
-                                if (!typingThrottleRef.current) {
-                                    socket.emit("user-typing", {
-                                        chatId: selectedChat._id,
-                                        members: selectedChat.members.map(
-                                            (m) => m._id
-                                        ),
-                                        sender: user._id,
-                                    });
-
-                                    typingThrottleRef.current = true;
-
-                                    // Allow another emit after 300ms
-                                    setTimeout(() => {
-                                        typingThrottleRef.current = false;
-                                    }, 300);
-                                }
-                            }}
+                            onChange={(e) => setMessage(e.target.value)}
                             rows={1}
                             onInput={(e) => {
                                 e.target.style.height = "auto";
@@ -310,19 +340,28 @@ export default function ChatArea({ socket, onlineUsers }) {
                                     e.target.scrollHeight + "px";
                             }}
                         />
+
+                        <label htmlFor="file">
+                            <i className="fa fa-picture-o send-image-btn"></i>
+                        </label>
+                        <input
+                            type="file"
+                            id="file"
+                            style={{ display: "none" }}
+                            accept="image/*"
+                            onChange={handleSelectImage}
+                        />
+
                         <button
                             className="fa fa-smile-o send-emoji-btn"
-                            aria-hidden="true"
-                            onClick={() => {
-                                setShowEmojiPicker(!showEmojiPicker);
-                            }}
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         ></button>
+
                         <button
                             className="fa fa-paper-plane send-message-btn"
-                            aria-hidden="true"
                             onClick={sendMessage}
                         ></button>
-                    </div>{" "}
+                    </div>
                 </div>
             )}
         </>

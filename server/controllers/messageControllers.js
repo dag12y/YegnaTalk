@@ -1,5 +1,6 @@
 import Message from "./../models/messageModel.js";
 import Chats from "./../models/chatModel.js";
+import cloudinary from "../configs/cloudinary.js";
 
 export async function newMessage(req, res) {
     try {
@@ -63,7 +64,6 @@ export async function newMessage(req, res) {
     }
 }
 
-
 export async function getAllMessages(req, res) {
     try {
         const userId = req.body.userId; // Extracted from JWT middleware
@@ -117,3 +117,70 @@ export async function getAllMessages(req, res) {
         });
     }
 }
+
+export async function sendImageMessage(req, res) {
+    try {
+        const userId = req.body.userId;
+        const { chatId } = req.body;
+
+        // Validate
+        if (!chatId) {
+            return res.status(400).json({
+                success: false,
+                message: "chatId is required",
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "No image file uploaded",
+            });
+        }
+
+        // Upload to Cloudinary
+        const uploadImage = () => {
+            return new Promise((resolve, reject) => {
+                cloudinary.uploader
+                    .upload_stream(
+                        { folder: "YegnaTalkChatImage" },
+                        (error, result) => {
+                            if (error) reject(error);
+                            else resolve(result.secure_url);
+                        }
+                    )
+                    .end(req.file.buffer);
+            });
+        };
+
+        const imageUrl = await uploadImage();
+
+        // Create message with image
+        const newMessage = new Message({
+            chatId,
+            sender: userId,
+            text: "",
+            image: imageUrl,
+        });
+
+        const savedMessage = await newMessage.save();
+
+        // Update chat last message & unread count
+        await Chats.findByIdAndUpdate(chatId, {
+            lastMessage: savedMessage._id,
+            $inc: { unreadMessageCount: 1 },
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Image message sent",
+            data: savedMessage,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+

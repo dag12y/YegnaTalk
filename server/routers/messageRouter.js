@@ -1,11 +1,28 @@
-import express from 'express';
+import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
-import { newMessage,getAllMessages} from '../controllers/messageControllers.js';
+import {
+    newMessage,
+    getAllMessages,
+    sendImageMessage
+} from "../controllers/messageControllers.js";
+import multer from "multer";
 
-const messageRouter = express.Router()
+// Configure Multer with memory storage and file size limit
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 20 * 1024 * 1024 },
+});
 
-messageRouter.post('/new-message',authMiddleware,newMessage)
-messageRouter.get('/get-all-messages/:chatId',authMiddleware,getAllMessages)
+const messageRouter = express.Router();
 
+messageRouter.post("/new-message", authMiddleware, newMessage);
+messageRouter.get("/get-all-messages/:chatId", authMiddleware, getAllMessages);
+
+messageRouter.post(
+    "/send-image",
+    authMiddleware,
+    upload.single("image"),
+    sendImageMessage
+);
 
 export default messageRouter;
