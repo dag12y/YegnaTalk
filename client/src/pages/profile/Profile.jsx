@@ -112,7 +112,7 @@ export default function Profile() {
                         className="upload-image-btn"
                         onClick={updateProfilePic}
                     >
-                        Upload
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload
                     </button>
                 </div>
             </div>
