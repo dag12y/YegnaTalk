@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import "../../../css/home.css";
 import { useSelector } from "react-redux";
 
-export default function Header() {
+export default function Header({socket}) {
     const { user } = useSelector((state) => state.userReducer);
     const navigate =useNavigate()
     
@@ -27,6 +27,12 @@ export default function Header() {
         return `${f}${l}`;
     }
 
+    function signout(){
+        localStorage.removeItem('token');
+        navigate('/login')
+        socket.emit('sign-out',user._id)
+    }
+
     return (
         <div className="app-header">
             <div className="app-logo">
@@ -34,8 +40,6 @@ export default function Header() {
                 <span className="brand-name">Yegna Talk</span>
             </div>
             <div className="app-user-profile">
-                <div className="logged-user-name">{getFullName()}</div>
-
                 {!user?.profile && (
                     <div
                         className="logged-user-profile-pic"
@@ -53,6 +57,10 @@ export default function Header() {
                         onClick={() => navigate("/profile")}
                     />
                 )}
+                <div className="logged-user-name">{getFullName()}</div>
+                <button className="signout-button">
+                    <i className="fa-solid fa-arrow-right-from-bracket signout-btn" onClick={signout}></i>
+                </button>
             </div>
         </div>
     );

@@ -68,6 +68,11 @@ io.on("connection", (socket) => {
         socket.emit('online-users',onlineUser)
     });
 
+    socket.on('sign-out',userId=>{
+        onlineUser.splice(onlineUser.indexOf(userId),1)
+        io.emit('online-users-updated',onlineUser)
+    })
+
     socket.on("disconnect", () => {
         console.log("Socket disconnected:", socket.id);
     });

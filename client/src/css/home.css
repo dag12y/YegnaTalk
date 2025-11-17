@@ -92,6 +92,38 @@
     background-color: #0369a1;
 }
 
+
+/* === SIGNOUT BUTTON === */
+.signout-btn {
+    font-size: 20px;
+    color: #0369a1;   
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.signout-button {
+    background: #e0f2fe;            
+    border: 2px solid #7dd3fc;    
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.25s ease;
+}
+
+.signout-button:hover {
+    background: #bae6fd;             
+    border-color: #38bdf8;            
+    transform: scale(1.08);           
+}
+
+.signout-button:active {
+    transform: scale(0.95);
+}
+
+
 /* === SIDEBAR === */
 .app-sidebar {
     width: 25%;
@@ -308,6 +340,8 @@
     text-align: left;
     letter-spacing: 0.5px;
 }
+
+
 
 /* MAIN CHAT AREA */
 .main-chat-area {
