@@ -341,9 +341,6 @@ export default function ChatArea({ socket, onlineUsers }) {
                             }}
                         />
 
-                        <label htmlFor="file">
-                            <i className="fa fa-picture-o send-image-btn"></i>
-                        </label>
                         <input
                             type="file"
                             id="file"
@@ -352,13 +349,17 @@ export default function ChatArea({ socket, onlineUsers }) {
                             onChange={handleSelectImage}
                         />
 
+                        <label htmlFor="file">
+                            <i className="fa-solid fa-image send-image-btn"></i>
+                        </label>
+
                         <button
-                            className="fa fa-smile-o send-emoji-btn"
+                            className="fa-regular fa-face-smile send-emoji-btn"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         ></button>
 
                         <button
-                            className="fa fa-paper-plane send-message-btn"
+                            className="fa-solid fa-paper-plane send-message-btn"
                             onClick={sendMessage}
                         ></button>
                     </div>
