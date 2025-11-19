@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from 'cors'
 import connectDB from "./configs/dbConfig.js";
 import authRouter from "./routers/authRouter.js";
 import userRouter from "./routers/userRouter.js";
@@ -19,6 +20,7 @@ const PORT = process.env.PORT || 3000;
 const onlineUser = []
 
 // Middleware
+app.use(cors())
 app.use(express.json());
 
 // Create HTTP server from Express app
